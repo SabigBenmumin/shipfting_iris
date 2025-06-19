@@ -1,0 +1,1 @@
+    img = cv2.cvtColor(img, cv2.IMREAD_GRAYSCALE)
