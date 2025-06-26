@@ -1,5 +1,4 @@
 import cv2
-import csv
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,7 +7,6 @@ import pandas as pd
 
 def read_image(img_path):
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-    # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     return img
 
 path = 'D:\\CASIA-IrisV2-20250213T083822Z-001'
@@ -51,7 +49,7 @@ base_path = r'C:/Users/Sabig/Iris/shifting example/Iris-Dataset/CASIA-IrisV2/dev
 files = glob.glob(base_path)
 f_data_frame = pd.DataFrame(files)
 
-template2 = np.ndarray(shape=(len(files),64,800), dtype=np.uint8)
+template2 = np.ndarray(shape=(len(files),51200,), dtype=np.uint8)
 # template2 = []
 print("Number of files:", len(files))
 # -----------------------------------------------------------
@@ -61,12 +59,13 @@ start_time = datetime.now()
 print("Start Time:", start_time.strftime("%Y-%m-%d %H:%M:%S"))
 
 for i,file in enumerate(files):
-    template1 = read_image(file)
-    template2[i,:,:] = template1
-    #print(template1.shape) #64,800,3
+    template1 = read_image(file).flatten()
+    template2[i,:] = template1
+# print(template2[0].shape) #(51200, )
+# print(template2[0]) #
 
 target = 100000
-duplicate_templates = np.ndarray(shape=(target, 64, 800), dtype=np.uint8) #153600
+duplicate_templates = np.ndarray(shape=(target, 51200,), dtype=np.uint8) #153600
 
 for i in range(target):
     duplicate_templates[i] = template2[i % len(template2)]  # Cycle through original templates
@@ -84,21 +83,22 @@ print()
 # -----------------------------------------------------------
 # timeStart = xxx
 start_time = datetime.now()
-t0 = time.perf_counter()
+t0 = time.time()
 print("Start Time:", start_time.strftime("%Y-%m-%d %H:%M:%S"))
 import matplotlib.pyplot as plt
 for i in range(target):
-    C = np.logical_xor(template1, duplicate_templates[i,:,:])
+    # C = np.logical_xor(template1, duplicate_templates[i,:])
+    C = np.bitwise_xor(template1, duplicate_templates[i,:])
     # plt.imshow(C.astype(np.uint8) * 255, cmap='gray')  # Multiply to make visible
     # plt.title(f"Difference Mask {i}")
     # plt.axis('off')
     # plt.show()
-    a = np.sum(C == 1)
+    a = np.sum(C)
     # a = np.sum(C)
     #print (i)
 
 # timeStop = yyyy
-t1 = time.perf_counter()
+t1 = time.time()
 end_time = datetime.now()
 print("End Time:", end_time.strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -106,18 +106,21 @@ duration = end_time - start_time
 print("XOR loop Duration:", duration)
 print(f"\t-> {t1-t0} sec for {target:,.0f} templates")
 print(f"\t-> avg: {((t1-t0)/target)*1000} ms/template")
+print("========================================================")
+print()
 # plt.imshow(duplicate_templates[0,:,:],cmap="gray")
 # print(type(duplicate_templates[0,:,:]))
-# print(duplicate_templates[0,:,:])
+# print(template1)
+# print(duplicate_templates[0])
 # plt.show()
 
 import csv
-csv_path = "optimize_result_statistics/grayscale_results.csv"
+csv_path = "optimize_result_statistics/flatten_newsum_results.csv"
 write_header = not os.path.exists(csv_path)
 with open(csv_path, mode='a', newline='') as file:
     writer = csv.writer(file)
     if write_header:
-        writer.writerow(["input as grayscale"])
+        writer.writerow(["flatten and bitwiseXOR"])
     writer.writerow([((t1-t0)/target)*1000])
 
 exit()
