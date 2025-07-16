@@ -3,6 +3,7 @@ import numpy as np
 from multiprocessing.connection import Listener
 
 def worker(input_queue, output_queue, wid):
+    print(f"[Worker {wid}] started")
     bitcount_lookup = np.array([bin(i).count('1') for i in range(256)], dtype=np.uint8)
     while True:
         task = input_queue.get()
@@ -46,7 +47,10 @@ def start_worker_server(address=('localhost', 6000), authkey=b'sabig'):
         conn = listener.accept()
         print(f"[Server] Connection accepted from {listener.last_accepted}")
         try:
-            input_template ,data = conn.recv()  # รับ numpy array
+            # input_template ,data = conn.recv()  # รับ numpy array
+            input_template = conn.recv()  # รับ numpy array
+            data = np.load(r'C:\Users\Sabig\Iris\shifting example\duplicate_templates_100k.npy')
+
             print(f"[Server] Got task shape: {data.shape}")
             chunk_size = len(data) // num_workers
             for i in range(num_workers):
